@@ -8,10 +8,11 @@ const generateToken = (res, userId, role, type) => {
     expiresIn: process.env.JWT_EXPIRE || "7d",
   });
 
+  // UPDATED COOKIE SETTINGS BELOW
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production", // HTTPS only in production
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // CHANGED THIS LINE
     maxAge: (process.env.COOKIE_EXPIRE || 7) * 24 * 60 * 60 * 1000, // days → ms
     path: "/",
   });
@@ -95,10 +96,10 @@ export const logout = async (req, res) => {
   try {
     res.cookie("token", "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // must match login
-      sameSite: "strict", // must match login
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", // UPDATED THIS LINE
       expires: new Date(0), // expire immediately
-      path: "/", // must match login
+      path: "/",
     });
 
     return res.status(200).json({
@@ -114,7 +115,6 @@ export const logout = async (req, res) => {
     });
   }
 };
-
 export const getProfile = async (req, res) => {
   try {
     const user = req.user;
