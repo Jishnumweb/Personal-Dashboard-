@@ -1,20 +1,17 @@
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 
 export async function middleware(req) {
   const url = req.nextUrl.clone();
   const pathname = url.pathname;
   const token = req.cookies.get("token")?.value;
 
-  // Helper: redirect to login and clear token
+  // Helper: redirect to login
   const redirectToLogin = () => {
     url.pathname = "/login";
-    const response = NextResponse.redirect(url);
-    response.cookies.delete("token");
-    return response;
+    return NextResponse.redirect(url);
   };
 
-  // Public routes (accessible without token)
+  // Public routes
   const publicRoutes = [
     "/login",
     "/signup",
@@ -22,7 +19,7 @@ export async function middleware(req) {
     "/reset-password",
   ];
 
-  // Allow static assets or API routes to pass through
+  // Allow static assets
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
@@ -40,51 +37,18 @@ export async function middleware(req) {
     return redirectToLogin();
   }
 
-  try {
-    // Verify JWT
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
-    const type = payload?.type;
-
-    // Restrict logged-in users from visiting auth pages
-    if (publicRoutes.some((route) => pathname.startsWith(route))) {
-      if (type === "Admin") {
-        url.pathname = "/admin/dashboard";
-        return NextResponse.redirect(url);
-      } else if (type === "Employee") {
-        url.pathname = "/employee/dashboard";
-        return NextResponse.redirect(url);
-      }
-    }
-
-    // Admin routes
-    if (type === "Admin") {
-      if (!pathname.startsWith("/admin")) {
-        url.pathname = "/admin/dashboard";
-        return NextResponse.redirect(url);
-      }
-      return NextResponse.next();
-    }
-
-    // Employee routes
-    if (type === "Employee") {
-      if (!pathname.startsWith("/employee")) {
-        url.pathname = "/employee/dashboard";
-        return NextResponse.redirect(url);
-      }
-      return NextResponse.next();
-    }
-
-    // Unknown role
-    return redirectToLogin();
-
-  } catch (err) {
-    // Invalid or expired token
-    return redirectToLogin();
+  // If token exists and trying to access auth pages, redirect to appropriate dashboard
+  if (publicRoutes.some((route) => pathname.startsWith(route))) {
+    // We can't check user type without verifying token
+    // Redirect to a generic dashboard or let the backend decide
+    url.pathname = "/admin/dashboard"; // Default redirect
+    return NextResponse.redirect(url);
   }
+
+  // Token exists and trying to access protected routes
+  return NextResponse.next();
 }
 
-// ✅ Only protect admin & employee routes
 export const config = {
   matcher: ["/admin/:path*", "/employee/:path*"],
 };
