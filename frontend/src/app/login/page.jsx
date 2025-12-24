@@ -52,7 +52,7 @@ const LoginPage = () => {
           password: "",
         });
         setErrors({});
-        router.push("/");
+        router.push("/admin/leads");
       } catch (error) {
       } finally {
         setIsLogin(false);

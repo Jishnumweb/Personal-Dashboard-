@@ -3,8 +3,8 @@ import Admin from "../models/Admin.js";
 import Employee from "../models/Employee.js";
 
 // Utility: Generate token & set cookie
-const generateToken = (res, userId, role, type) => {
-  const token = jwt.sign({ id: userId, role, type }, process.env.JWT_SECRET, {
+const generateToken = (res, userId) => {
+  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || "7d",
   });
 
@@ -65,17 +65,15 @@ export const login = async (req, res) => {
     }
 
     // Create JWT token
-    generateToken(res, user._id, user.role || "user", type);
+    generateToken(res, user._id || "user");
 
     return res.status(200).json({
       success: true,
-      message: `${type} logged in successfully`,
+      message: ` logged in successfully`,
       data: {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
-        type,
       },
     });
   } catch (error) {
