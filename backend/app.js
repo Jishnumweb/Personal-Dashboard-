@@ -28,20 +28,14 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://personal-dashboard-rm2r.vercel.app",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );
 
-app.set("trust proxy", 1);
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-
-
-
-
 
 app.use("/api/leads", leadRoute);
 app.use("/api/admins", adminRoute);

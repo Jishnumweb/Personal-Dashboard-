@@ -10,8 +10,8 @@ const generateToken = (res, userId, role, type) => {
 
   res.cookie("token", token, {
     httpOnly: true,
-    secure: true, // HTTPS only in production
-    sameSite: "none",
+    secure: process.env.NODE_ENV === "production", // HTTPS only in production
+    sameSite: "lax",
     maxAge: (process.env.COOKIE_EXPIRE || 7) * 24 * 60 * 60 * 1000, // days → ms
     path: "/",
   });
